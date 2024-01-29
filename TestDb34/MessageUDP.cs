@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TestDb34.Models;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TestDb34
 {
@@ -14,6 +15,8 @@ namespace TestDb34
         Message,
         Confirmation
     }
+
+   
 
     public class MessageUDP
     {
@@ -33,6 +36,11 @@ namespace TestDb34
         public static MessageUDP FromJson(string json)
         {
             return JsonSerializer.Deserialize<MessageUDP>(json);
+        }
+
+        public override string ToString()
+        {
+            return $"{DateTime.Now} \n Получено сообщение {Text} \n от {FromName} ";
         }
     }
 }

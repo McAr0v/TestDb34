@@ -6,13 +6,26 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using TestDb34.Models;
+using TestDb34.Abstraction;
 
 namespace TestDb34
 {
     public class Server
     {
+
+        private readonly IMessageSource _messageSource;
+        private readonly IPEndPoint _peerEndPoint;
+        private readonly string _name;
+
+        public Server(IMessageSource messageSource, IPEndPoint peerEndPoint, string name)
+        {
+            _messageSource = messageSource;
+            _peerEndPoint = peerEndPoint;
+            _name = name;
+        }
+
         Dictionary<String, IPEndPoint> clients = new Dictionary<string, IPEndPoint>();
-        UdpClient udpClient;
+        //UdpClient udpClient;
 
         void Register(MessageUDP message, IPEndPoint fromep)
         {
@@ -63,13 +76,20 @@ namespace TestDb34
                     id = msg.Id;
                 }
 
+                // Как я понимаю, вот так должно получиться
+                _messageSource.SendMessage(message, ep);
 
+                // Вместо ниже закоментированного)
+
+                /*
                 var forwardMessageJson = new MessageUDP() { Id = id, Command = Command.Message, ToName = message.ToName, FromName = message.FromName, Text = message.Text }.ToJson();
 
                 byte[] forwardBytes = Encoding.ASCII.GetBytes(forwardMessageJson);
 
-                udpClient.Send(forwardBytes, forwardBytes.Length, ep);
+                udpClient.Send(forwardBytes, forwardBytes.Length, ep);*/
+                
                 Console.WriteLine($"Message Relied, from = {message.FromName} to = {message.ToName}");
+                
             }
             else
             {
@@ -103,25 +123,31 @@ namespace TestDb34
         public void Work()
         {
 
-            IPEndPoint remoteEndPoint;
+            /*IPEndPoint remoteEndPoint;
 
             udpClient = new UdpClient(12345);
-            remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);*/
 
+            IPEndPoint ep = new IPEndPoint(_peerEndPoint.Address, _peerEndPoint.Port);
             Console.WriteLine("UDP Клиент ожидает сообщений...");
 
             while (true)
             {
+                var messageUdp = _messageSource.RecieveMessage(ref ep);
+
+                Console.WriteLine(messageUdp.ToString());
+
+                /*
                 byte[] receiveBytes = udpClient.Receive(ref remoteEndPoint);
                 string receivedData = Encoding.ASCII.GetString(receiveBytes);
 
-                Console.WriteLine(receivedData);
+                Console.WriteLine(receivedData);*/
 
                 try
                 {
-                    var message = MessageUDP.FromJson(receivedData);
+                    //var message = MessageUDP.FromJson(receivedData);
 
-                    ProcessMessage(message, remoteEndPoint);
+                    ProcessMessage(messageUdp, ep);
 
                 }
                 catch (Exception ex)
